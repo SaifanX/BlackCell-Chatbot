@@ -39,4 +39,4 @@ A high-performance AI chatbot designed for Saifan, an ambitious student from Orc
 - Add more features or settings as you wish!
 
 ---
-Made for Saifan by BlackCell AI.
+Made by Saifan-BlackCell AI.
