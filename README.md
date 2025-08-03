@@ -11,7 +11,7 @@ A high-performance AI chatbot designed for Saifan, an ambitious student from Orc
 ## Setup
 1. Clone the repo:
    ```
-   git clone https://github.com/YOUR_USERNAME/blackcell-chatbot-saifan.git
+   git clone https://github.com/YOUR_USERNAME/BlackCell-ChatBot.git
    cd blackcell-chatbot-saifan
    ```
 2. Install dependencies:
