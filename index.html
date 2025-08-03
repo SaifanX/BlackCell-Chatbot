@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlackCell AI Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-end">
+  <div class="flex flex-col items-center w-full h-full">
+    <div class="w-full max-w-xl flex-1 flex flex-col justify-end">
+      <h1 class="text-2xl font-bold text-center mb-4">BlackCell AI Chatbot</h1>
+      <div id="messages" class="flex flex-col gap-2 overflow-y-auto px-2 pb-32 pt-4" style="max-height: 70vh;"></div>
+      <div class="fixed bottom-0 left-0 w-full flex justify-center bg-gray-900 py-4 border-t border-gray-800">
+        <div class="w-full max-w-xl flex items-center gap-2">
+          <input type="text" id="userInput" class="flex-1 bg-gray-700 text-gray-100 px-4 py-2 rounded focus:outline-none" placeholder="Type your message..." />
+          <button id="sendBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center" title="Send">Send</button>
+          <button id="clearBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded" title="Clear">Clear</button>
+        </div>
+      </div>
+      <div class="w-full max-w-xl mx-auto flex flex-wrap gap-2 py-2 justify-center">
+        <button class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1 rounded" onclick="quickPrompt('Help me study for exams')">📚 Study Help</button>
+        <button class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1 rounded" onclick="quickPrompt('Tell me about Saifan')">🧑 About Saifan</button>
+        <button class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1 rounded" onclick="quickPrompt('Show me a Python coding example')">🐍 Python Example</button>
+        <button class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1 rounded" onclick="quickPrompt('How to start a business?')">💼 Startup Advice</button>
+        <button class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1 rounded" onclick="quickPrompt('Give me a chess strategy')">♟️ Chess Strategy</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let chatHistory = [];
+    function scrollToBottom() {
+      const messages = document.getElementById('messages');
+      messages.scrollTop = messages.scrollHeight;
+    }
+    function appendMessage(role, text, idx) {
+      const messages = document.getElementById('messages');
+      const bubble = document.createElement('div');
+      bubble.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+      bubble.innerHTML = `<div class="relative max-w-[80%] px-4 py-2 rounded-xl shadow ${role === 'user' ? 'bg-blue-600 text-white self-end' : 'bg-gray-700 text-yellow-200 self-start'}">
+        <div class="prose prose-invert break-words" id="msg${idx}"></div>
+        <div class="absolute top-1 right-1 flex gap-1">
+          <button class="text-xs hover:underline" onclick="copyMessage(${idx})">Copy</button>
+        </div>
+      </div>`;
+      messages.appendChild(bubble);
+      scrollToBottom();
+    }
+    function showTyping(role, idx) {
+      const messages = document.getElementById('messages');
+      const bubble = document.createElement('div');
+      bubble.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+      bubble.innerHTML = `<div class="max-w-[80%] px-4 py-2 rounded-xl shadow ${role === 'user' ? 'bg-blue-600 text-white self-end' : 'bg-gray-700 text-yellow-200 self-start'} typing" id="typingBubble">...</div>`;
+      messages.appendChild(bubble);
+      scrollToBottom();
+    }
+    async function typeMessage(role, text, idx) {
+      let i = 0;
+      while (i <= text.length) {
+        document.getElementById(`msg${idx}`).innerHTML = marked.parse(text.slice(0, i));
+        await new Promise(r => setTimeout(r, 12));
+        i++;
+      }
+    }
+    function copyMessage(idx) {
+      navigator.clipboard.writeText(chatHistory[idx].text);
+    }
+    function quickPrompt(prompt) {
+      document.getElementById('userInput').value = prompt;
+      document.getElementById('userInput').focus();
+    }
+    function clearChat() {
+      document.getElementById('messages').innerHTML = '';
+      chatHistory = [];
+      fetch('/clear', { method: 'POST' });
+    }
+    function sendMessage(regenerate = false) {
+      const input = document.getElementById('userInput');
+      let msg = input.value.trim();
+      if (!msg && !regenerate) return;
+      if (!regenerate) {
+        appendMessage('user', msg, chatHistory.length);
+        chatHistory.push({ role: 'user', text: msg });
+      }
+      showTyping('ai', chatHistory.length);
+      input.value = '';
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          model: 'LLaMA3',
+          web_search: false,
+          regenerate: regenerate
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('messages').lastChild.remove();
+        if (data.reply) {
+          appendMessage('ai', '', chatHistory.length);
+          typeMessage('ai', data.reply, chatHistory.length);
+          chatHistory.push({ role: 'ai', text: data.reply });
+        } else {
+          appendMessage('ai', 'Error: ' + (data.error || 'Unknown error'), chatHistory.length);
+          chatHistory.push({ role: 'ai', text: 'Error: ' + (data.error || 'Unknown error') });
+        }
+      });
+    }
+    document.getElementById('sendBtn').onclick = () => sendMessage();
+    document.getElementById('clearBtn').onclick = () => clearChat();
+    document.getElementById('userInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+API.env
+*.env
+__pycache__/
+.vscode/
+.env
+.DS_Store
