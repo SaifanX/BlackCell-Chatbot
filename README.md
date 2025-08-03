@@ -11,7 +11,7 @@ A high-performance AI chatbot designed for Saifan, an ambitious student from Orc
 ## Setup
 1. Clone the repo:
    ```
-   git clone https://github.com/YOUR_USERNAME/BlackCell-ChatBot.git
+   git clone https://github.com/SaifanX/BlackCell-ChatBot.git
    cd blackcell-chatbot-saifan
    ```
 2. Install dependencies:
@@ -20,7 +20,7 @@ A high-performance AI chatbot designed for Saifan, an ambitious student from Orc
    ```
 3. Create an `API.env` file (not included in repo):
    ```
-   GROQ_API_KEY=your_groq_api_key_here
+   YOUR_API_KEY=your_api_key_here
    ```
 4. Run the app:
    ```
